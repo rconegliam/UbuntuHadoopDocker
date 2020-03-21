@@ -1,7 +1,8 @@
-# Ongoing Project
-We are building a Hadoop cluster using Docker to build a developing environment. Currently, we were
+# Project - v1: Spark (Scala) running on Yarn
+We have built a Hadoop cluster using Docker to build a developing environment. Currently, we were
 able to build Spark 2.4.5 to run on Hadoop 2.7. This should serve as a reference when building a 
-develop environment.
+develop environment. The next step would be to build a 3 node cluster in order to get a better understanding
+of Hadoop's ecossystem, but this should be added in future releases.
 
 # Starting up
 
@@ -11,8 +12,10 @@ environments) and restart hadoop:
 
 service ssh start
 stop-all.sh
-hadoop namenode -format
+hadoop namenode -format # NEVER USE THIS ON PRODUCTION
 start-all.sh
+
+You could use dfs-start.sh and the yarn shell if you would like to as well.
 
 # Testing
 
