@@ -1,0 +1,7 @@
+1) Entre no container hadoopspark: docker exec -it hadoopspark /bin/bash
+2) Inicie o ssh como root(o Hadoop, mesmo rodando com só uma instância, necessita desse serviço): service ssh start 
+3) Inicie o hadoop como root: start-all.sh
+4) Mude para o usuário hduser: su - hduser
+5) Baixe os dois jars que constam nessa pasta do Drive e coloque-os na pasta sparkjars dentro do zip que enviei (que é a pasta de volume mapeado):
+https://drive.google.com/open?id=1Lc1B8FkA7UXK9vDzqgecaQb87mhDnwVq
+6) Rode o spark-submit: spark-submit --deploy-mode client --master yarn --num-executors 4 --conf spark.dynamicAllocation.enabled=false          --jars spark-sql-kafka-0-10_2.11-2.4.0.jar  --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.0    --class Teste    /home/hduser/sparkjars/SparkKafkaConfluentScylla-assembly-0.1.jar

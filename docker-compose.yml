@@ -1,0 +1,169 @@
+version: '2.0'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:5.3.1
+    container_name: zookeeper
+    hostname: zookeeper 
+    networks:
+        cluster:
+            ipv4_address: 172.20.128.6
+    restart: on-failure
+    ports:
+        - "2181:2181"
+    environment:
+        - ZOOKEEPER_SERVER_ID=1
+        - ZOOKEEPER_CLIENT_PORT=2181
+        - ZOOKEEPER_TICK_TIME=2000
+    expose:
+        - "2181"
+  
+  kafka:
+    image: confluentinc/cp-kafka:5.3.1
+    hostname: kafka
+    container_name: kafka
+    networks:
+        cluster:
+            ipv4_address: 172.20.128.5
+    restart: on-failure
+    depends_on:
+        - zookeeper
+    ports:
+        - "9092:9092"
+        - "9093:9093"
+        - "29092:29092"
+    expose:
+        - "9093"
+        - "9092"
+        - "29092"
+    environment:
+        - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+        - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+        - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+        - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+        - KAFKA_BROKER_ID=1
+        - BOOTSTRAP_SERVERS=kafka:9092
+        - ZOOKEEPER=zookeeper:2181
+        - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1    
+#- KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+#- KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL
+#- KAFKA_LISTENERS=INTERNAL://:9092,EXTERNAL://:9093
+#- KAFKA_ADVERTISED_LISTENERS=INTERNAL://:9092,EXTERNAL://:9093
+#- KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+#- KAFKA_BROKER_ID=1
+#- BOOTSTRAP_SERVERS=kafka:9092
+#- ZOOKEEPER=zookeeper:2181
+#- KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+
+
+
+  schemaregistry:
+    image: confluentinc/cp-schema-registry:5.3.1
+    container_name: schemaregistry
+    hostname: schemaregistry
+    networks:
+        cluster:
+            ipv4_address: 172.20.128.2
+    restart: on-failure
+    depends_on:
+        - zookeeper
+        - kafka
+    ports:
+        - "8081:8081"
+    environment:
+        - SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL=zookeeper:2181
+        - SCHEMA_REGISTRY_HOST_NAME=localhost
+    expose:
+        - "8081"
+
+  nifi:
+    image: apache/nifi
+    container_name: nifi
+    hostname: nifi
+    networks:
+        cluster:
+            ipv4_address: 172.20.128.3
+    restart: on-failure
+    depends_on:
+        - zookeeper
+    ports:
+        - "8889:8889"
+        - "8090:8090"
+    expose:
+        - "8889"
+    environment:
+        - NIFI_WEB_HTTP_PORT=8889
+        - NIFI_CLUSTER_NODE_PROTOCOL_PORT=8082
+        - NIFI_ELECTION_MAX_WAIT=2 min
+        - NIFI_ZK_CONNECT_STRING=zookeeper:2181
+        
+  scylla:
+    image: scylladb/scylla:3.0.10
+    container_name: scylla
+    hostname: scylla
+    networks:
+        cluster:
+            ipv4_address: 172.20.128.4
+    restart: on-failure
+    ports:
+        - "7000:7000"
+        - "7001:7001"
+        - "9042:9042"
+        - "9160:9160"
+        - "9180:9180"
+        - "10000:10000"
+    expose:
+        - "9042"
+        
+  sparkhadoop:
+   image: gustavobuosi/hadoopubuntu:v05
+   restart: always
+   container_name: hadoopspark
+   hostname: hadoopspark
+   stdin_open: true
+   tty: true
+#   entrypoint: /bin/bash
+#   command: sh -c 'service ssh start'
+#   command: sh -c ‘echo -e “yes\nyes” | start-all.sh’
+#   command: sh -c '/home/hduser/hadoop/sbin/start-all.sh'
+   networks:
+       cluster:
+           ipv4_address: 172.20.128.7
+   ports:
+       - "9000:9000"
+       - "4040:4040"
+   expose:
+       - "4040"
+   volumes:
+       - C:\Users\conegr\OneDrive - Dell Technologies\PROJETOS\SANTANDER\CRONOS\ambiente\ComposeCronos\sparkjars:/home/hduser/sparkjars
+
+# sparkhadoop:
+#    environment:
+#    - HDFS_NAMESERVICE_HOST:namenode.example.com
+#    image: izone/hadoop:cluster
+#
+#    volumes: 
+#        - ./sparkjars:/home/hduser
+#    ports:
+#        - 9000:9000
+#        - 8088:8088 
+#        - 8042:8042
+#        - 50070:50070
+#        - 8888:8888
+#        - 8080:8080
+#        - 4040:4040
+#        - 8787:8787
+#        - 60010:60010
+#        - 60030:60030
+#    networks:
+#        cluster:
+#          ipv4_address: 172.20.128.7
+#    
+
+networks:
+  cluster:
+    driver: bridge     
+    ipam:
+        driver: default
+        config:
+            - subnet: 172.20.0.0/16
+              gateway: 172.20.0.1
