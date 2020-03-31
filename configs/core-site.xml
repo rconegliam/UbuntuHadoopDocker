@@ -19,7 +19,7 @@
 <configuration>
 	<property>
             <name>fs.default.name</name>
-            <value>hdfs://localhost:9000</value>
+            <value>hdfs://172.20.128.7:9000</value>
         </property>
 </configuration>
 
